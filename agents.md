@@ -14,8 +14,9 @@ Guidance for AI coding assistants (Claude Code, Cursor, Copilot, etc.) working w
 
 | Type | Purpose | Key Properties |
 |------|---------|----------------|
-| `DebugToolbar` | Main view component | `title`, `icon`, `sections`, `actions`, `onCopy` |
-| `DebugSection` | Groups key-value pairs | `title`, `rows: [(String, String)]` |
+| `DebugToolbar` | Main view component | `title`, `icon`, `sections`, `controls`, `actions`, `onCopy` |
+| `DebugSection` | Groups read-only key-value pairs | `title`, `rows: [(String, String)]` |
+| `DebugControl` | Editable control (toggle, stepper, etc.) | varies by control type |
 | `DebugAction` | Clickable action button | `label`, `icon`, `destructive`, `action` |
 
 ## When to Add DebugKit
@@ -69,6 +70,7 @@ When adding DebugKit to an existing app:
    private var debugToolbar: some View {
        DebugToolbar(
            sections: [...],
+           controls: [...],
            actions: [...],
            onCopy: { ... }
        )
@@ -105,6 +107,50 @@ DebugSection("NETWORK", [
 | Booleans | Descriptive strings | `"Active"` / `"Idle"` |
 | Optionals | Handle nil case | `value ?? "None"` |
 | Decimals | `String(format: "%.2f", value)` | `"3.14"` |
+
+### Building Controls
+
+Use controls when you want to **edit** values at runtime, not just view them. Each control supports both bindings and closures:
+
+```swift
+controls: [
+    // Boolean toggle
+    .toggle("Grid", binding: $showGrid),
+
+    // Integer stepper with +/- buttons
+    .stepper("Count", binding: $count, range: 0...100, step: 1),
+
+    // Double slider for continuous values
+    .slider("Opacity", binding: $opacity, range: 0.0...1.0),
+
+    // Text field (commits on Enter or blur)
+    .text("Name", binding: $name, placeholder: "Enter name"),
+
+    // Dropdown picker
+    .picker("Mode", options: ["Edit", "Preview"], binding: $mode)
+]
+```
+
+**Using closures** (for side effects beyond state updates):
+
+```swift
+.stepper("Zoom", value: zoomPercent, range: 25...400, step: 25) { newValue in
+    withAnimation { scale = Double(newValue) / 100.0 }
+}
+
+.text("API Key", value: apiKey) { newValue in
+    apiKey = newValue
+    client.updateKey(newValue)
+}
+```
+
+| Control | Use Case | Parameters |
+|---------|----------|------------|
+| `.toggle` | On/off settings | `label`, `value`/`binding` |
+| `.stepper` | Discrete integers | `label`, `value`/`binding`, `range?`, `step` |
+| `.slider` | Continuous doubles | `label`, `value`/`binding`, `range`, `step?` |
+| `.text` | String input | `label`, `value`/`binding`, `placeholder` |
+| `.picker` | Selection from options | `label`, `options`, `selected`/`binding` |
 
 ### Building Actions
 
@@ -152,11 +198,13 @@ onCopy: {
 |---------|------------------|
 | Forgetting `#if DEBUG` wrapper | Always wrap usage in `#if DEBUG` |
 | Putting toolbar in VStack | Use ZStack - toolbar positions itself |
-| Adding business logic to actions | Actions are for state resets/debug helpers only |
+| Adding business logic to actions/controls | Actions and controls are for state updates only |
 | Hardcoding values | Use live state bindings |
 | Skipping `onCopy` | Always include for easy bug report sharing |
 | Using text icons | Use SF Symbols (`Image(systemName:)`) |
 | Complex section structures | Keep it simple: key-value pairs only |
+| Using sections for editable state | Use controls for values you want to tweak |
+| Using controls for read-only state | Use sections for display-only values |
 
 ## SF Symbol Suggestions
 
@@ -182,10 +230,12 @@ struct CanvasView: View {
     @State private var offset: CGSize = .zero
     @State private var nodes: [Node] = []
     @State private var selectedIds: Set<UUID> = []
+    @State private var showGrid = true
+    @State private var snapToGrid = false
 
     var body: some View {
         ZStack {
-            Canvas(nodes: nodes, scale: scale, offset: offset)
+            Canvas(nodes: nodes, scale: scale, offset: offset, showGrid: showGrid)
 
             #if DEBUG
             debugToolbar
@@ -197,14 +247,17 @@ struct CanvasView: View {
     private var debugToolbar: some View {
         DebugToolbar(
             sections: [
-                DebugSection("CANVAS", [
-                    ("Zoom", String(format: "%.0f%%", scale * 100)),
-                    ("Offset", "(\(Int(offset.width)), \(Int(offset.height)))"),
-                ]),
                 DebugSection("DATA", [
                     ("Nodes", "\(nodes.count)"),
                     ("Selected", "\(selectedIds.count)")
                 ])
+            ],
+            controls: [
+                .toggle("Show Grid", binding: $showGrid),
+                .toggle("Snap to Grid", binding: $snapToGrid),
+                .stepper("Zoom %", value: Int(scale * 100), range: 25...400, step: 25) { newValue in
+                    withAnimation { scale = CGFloat(newValue) / 100.0 }
+                }
             ],
             actions: [
                 DebugAction("Reset View", icon: "arrow.up.left.and.arrow.down.right") {
@@ -245,8 +298,9 @@ The toolbar accepts optional customization:
 DebugToolbar(
     title: "CANVAS",        // Default: "DEV"
     icon: "paintbrush",     // Default: "ant.fill"
-    sections: [...],
-    actions: [...],
+    sections: [...],        // Read-only key-value pairs
+    controls: [...],        // Editable controls
+    actions: [...],         // Action buttons
     onCopy: { ... }
 )
 ```

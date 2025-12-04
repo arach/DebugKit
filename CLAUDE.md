@@ -36,6 +36,7 @@ var body: some View {
 private var debugToolbar: some View {
     DebugToolbar(
         sections: buildSections(),
+        controls: buildControls(),
         actions: buildActions(),
         onCopy: { buildCopyText() }
     )
@@ -43,7 +44,7 @@ private var debugToolbar: some View {
 #endif
 ```
 
-3. **Sections show key-value pairs** - Group related state:
+3. **Sections show key-value pairs** - Group related read-only state:
 
 ```swift
 DebugSection("CANVAS", [
@@ -53,7 +54,19 @@ DebugSection("CANVAS", [
 ])
 ```
 
-4. **Actions for common debug operations**:
+4. **Controls for editable state** - Use when you want to tweak values at runtime:
+
+```swift
+controls: [
+    .toggle("Grid", binding: $showGrid),
+    .stepper("Zoom %", binding: $zoomLevel, range: 10...200, step: 10),
+    .slider("Opacity", binding: $opacity, range: 0...1),
+    .text("Label", binding: $nodeLabel),
+    .picker("Mode", options: ["Edit", "Preview", "Export"], binding: $mode)
+]
+```
+
+5. **Actions for common debug operations**:
 
 ```swift
 DebugAction("Reset Zoom", icon: "arrow.up.left.and.arrow.down.right") {
@@ -62,7 +75,7 @@ DebugAction("Reset Zoom", icon: "arrow.up.left.and.arrow.down.right") {
 }
 ```
 
-5. **onCopy for clipboard export** - Format as readable text:
+6. **onCopy for clipboard export** - Format as readable text:
 
 ```swift
 onCopy: {
@@ -80,13 +93,16 @@ onCopy: {
 - Use SF Symbols for action icons
 - Format numbers nicely (%.2f, Int(), etc.)
 - Group related values into sections
+- Use controls for values you frequently tweak during development
+- Use bindings for simple state, closures when you need side effects
 - Include a "copy debug info" via onCopy for bug reports
 
 ## Don't
 
-- Put business logic in actions - just state resets and debug helpers
+- Put business logic in actions or control callbacks - just state updates and debug helpers
 - Over-engineer sections - simple key-value pairs are fine
 - Forget destructive: true for destructive actions (shows red)
+- Use controls for values that should never be changed at runtime
 
 ## Adding to a Project
 
@@ -111,14 +127,19 @@ private var debugToolbar: some View {
     DebugToolbar(
         sections: [
             DebugSection("CANVAS", [
-                ("Zoom", String(format: "%.0f%%", state.scale * 100)),
-                ("Offset", "(\(Int(state.offset.width)), \(Int(state.offset.height)))"),
                 ("Nodes", "\(state.nodes.count)"),
                 ("Connections", "\(state.connections.count)")
             ])
         ],
+        controls: [
+            .toggle("Show Grid", binding: $state.showGrid),
+            .stepper("Zoom %", value: Int(state.scale * 100), range: 25...400, step: 25) { newValue in
+                withAnimation { state.scale = Double(newValue) / 100.0 }
+            },
+            .picker("Tool", options: ["Select", "Pan", "Connect"], binding: $state.currentTool)
+        ],
         actions: [
-            DebugAction("Reset Zoom", icon: "arrow.up.left.and.arrow.down.right") {
+            DebugAction("Reset View", icon: "arrow.up.left.and.arrow.down.right") {
                 withAnimation { state.scale = 1.0; state.offset = .zero }
             },
             DebugAction("Clear All", icon: "trash", destructive: true) {

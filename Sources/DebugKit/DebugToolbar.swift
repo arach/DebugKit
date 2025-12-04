@@ -36,6 +36,79 @@ public struct DebugAction: Identifiable {
     }
 }
 
+// MARK: - Debug Controls
+
+/// A control for editing values directly in the debug toolbar
+public enum DebugControl: Identifiable {
+    case toggle(label: String, value: Bool, onChange: (Bool) -> Void)
+    case stepper(label: String, value: Int, range: ClosedRange<Int>?, step: Int, onChange: (Int) -> Void)
+    case slider(label: String, value: Double, range: ClosedRange<Double>, step: Double?, onChange: (Double) -> Void)
+    case text(label: String, value: String, placeholder: String, onChange: (String) -> Void)
+    case picker(label: String, options: [String], selected: String, onChange: (String) -> Void)
+
+    public var id: String {
+        switch self {
+        case .toggle(let label, _, _): return "toggle-\(label)"
+        case .stepper(let label, _, _, _, _): return "stepper-\(label)"
+        case .slider(let label, _, _, _, _): return "slider-\(label)"
+        case .text(let label, _, _, _): return "text-\(label)"
+        case .picker(let label, _, _, _): return "picker-\(label)"
+        }
+    }
+
+    // MARK: - Convenience Initializers
+
+    /// Toggle control for boolean values
+    public static func toggle(_ label: String, value: Bool, onChange: @escaping (Bool) -> Void) -> DebugControl {
+        .toggle(label: label, value: value, onChange: onChange)
+    }
+
+    /// Toggle control with binding
+    public static func toggle(_ label: String, binding: Binding<Bool>) -> DebugControl {
+        .toggle(label: label, value: binding.wrappedValue, onChange: { binding.wrappedValue = $0 })
+    }
+
+    /// Stepper control for integer values
+    public static func stepper(_ label: String, value: Int, range: ClosedRange<Int>? = nil, step: Int = 1, onChange: @escaping (Int) -> Void) -> DebugControl {
+        .stepper(label: label, value: value, range: range, step: step, onChange: onChange)
+    }
+
+    /// Stepper control with binding
+    public static func stepper(_ label: String, binding: Binding<Int>, range: ClosedRange<Int>? = nil, step: Int = 1) -> DebugControl {
+        .stepper(label: label, value: binding.wrappedValue, range: range, step: step, onChange: { binding.wrappedValue = $0 })
+    }
+
+    /// Slider control for double values
+    public static func slider(_ label: String, value: Double, range: ClosedRange<Double>, step: Double? = nil, onChange: @escaping (Double) -> Void) -> DebugControl {
+        .slider(label: label, value: value, range: range, step: step, onChange: onChange)
+    }
+
+    /// Slider control with binding
+    public static func slider(_ label: String, binding: Binding<Double>, range: ClosedRange<Double>, step: Double? = nil) -> DebugControl {
+        .slider(label: label, value: binding.wrappedValue, range: range, step: step, onChange: { binding.wrappedValue = $0 })
+    }
+
+    /// Text field control for string values
+    public static func text(_ label: String, value: String, placeholder: String = "", onChange: @escaping (String) -> Void) -> DebugControl {
+        .text(label: label, value: value, placeholder: placeholder, onChange: onChange)
+    }
+
+    /// Text field control with binding
+    public static func text(_ label: String, binding: Binding<String>, placeholder: String = "") -> DebugControl {
+        .text(label: label, value: binding.wrappedValue, placeholder: placeholder, onChange: { binding.wrappedValue = $0 })
+    }
+
+    /// Picker control for selecting from options
+    public static func picker(_ label: String, options: [String], selected: String, onChange: @escaping (String) -> Void) -> DebugControl {
+        .picker(label: label, options: options, selected: selected, onChange: onChange)
+    }
+
+    /// Picker control with binding
+    public static func picker(_ label: String, options: [String], binding: Binding<String>) -> DebugControl {
+        .picker(label: label, options: options, selected: binding.wrappedValue, onChange: { binding.wrappedValue = $0 })
+    }
+}
+
 // MARK: - Debug Toolbar
 
 public struct DebugToolbar: View {
@@ -45,19 +118,22 @@ public struct DebugToolbar: View {
     let title: String
     let icon: String
     let sections: [DebugSection]
+    let controls: [DebugControl]
     let actions: [DebugAction]
     let copyHandler: (() -> String)?
 
     public init(
         title: String = "DEV",
         icon: String = "ant.fill",
-        sections: [DebugSection],
+        sections: [DebugSection] = [],
+        controls: [DebugControl] = [],
         actions: [DebugAction] = [],
         onCopy copyHandler: (() -> String)? = nil
     ) {
         self.title = title
         self.icon = icon
         self.sections = sections
+        self.controls = controls
         self.actions = actions
         self.copyHandler = copyHandler
     }
@@ -137,6 +213,10 @@ public struct DebugToolbar: View {
             VStack(alignment: .leading, spacing: 10) {
                 ForEach(sections) { section in
                     SectionView(section: section)
+                }
+
+                if !controls.isEmpty {
+                    ControlsView(controls: controls)
                 }
 
                 if !actions.isEmpty || copyHandler != nil {
@@ -280,5 +360,287 @@ private struct ActionButton: View {
             .cornerRadius(4)
         }
         .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Controls View
+
+private struct ControlsView: View {
+    let controls: [DebugControl]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("CONTROLS")
+                .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                .tracking(1)
+                .foregroundColor(.secondary)
+
+            VStack(spacing: 4) {
+                ForEach(controls) { control in
+                    ControlRow(control: control)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Control Row
+
+private struct ControlRow: View {
+    let control: DebugControl
+
+    var body: some View {
+        switch control {
+        case .toggle(let label, let value, let onChange):
+            ToggleControlView(label: label, value: value, onChange: onChange)
+        case .stepper(let label, let value, let range, let step, let onChange):
+            StepperControlView(label: label, value: value, range: range, step: step, onChange: onChange)
+        case .slider(let label, let value, let range, let step, let onChange):
+            SliderControlView(label: label, value: value, range: range, step: step, onChange: onChange)
+        case .text(let label, let value, let placeholder, let onChange):
+            TextControlView(label: label, value: value, placeholder: placeholder, onChange: onChange)
+        case .picker(let label, let options, let selected, let onChange):
+            PickerControlView(label: label, options: options, selected: selected, onChange: onChange)
+        }
+    }
+}
+
+// MARK: - Toggle Control
+
+private struct ToggleControlView: View {
+    let label: String
+    let value: Bool
+    let onChange: (Bool) -> Void
+
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                .foregroundColor(.secondary)
+
+            Spacer()
+
+            Toggle("", isOn: Binding(
+                get: { value },
+                set: { onChange($0) }
+            ))
+            .toggleStyle(.switch)
+            .controlSize(.mini)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+        .cornerRadius(4)
+        .overlay(
+            RoundedRectangle(cornerRadius: 4)
+                .strokeBorder(Color(nsColor: .separatorColor).opacity(0.5), lineWidth: 0.5)
+        )
+    }
+}
+
+// MARK: - Stepper Control
+
+private struct StepperControlView: View {
+    let label: String
+    let value: Int
+    let range: ClosedRange<Int>?
+    let step: Int
+    let onChange: (Int) -> Void
+
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                .foregroundColor(.secondary)
+
+            Spacer()
+
+            HStack(spacing: 4) {
+                Button(action: {
+                    let newValue = value - step
+                    if let range = range {
+                        onChange(max(range.lowerBound, newValue))
+                    } else {
+                        onChange(newValue)
+                    }
+                }) {
+                    Image(systemName: "minus")
+                        .font(.system(size: 9, weight: .bold))
+                        .frame(width: 18, height: 18)
+                        .background(Color(nsColor: .controlBackgroundColor))
+                        .cornerRadius(3)
+                }
+                .buttonStyle(.plain)
+                .disabled(range.map { value <= $0.lowerBound } ?? false)
+
+                Text("\(value)")
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .frame(minWidth: 30)
+                    .foregroundColor(.primary)
+
+                Button(action: {
+                    let newValue = value + step
+                    if let range = range {
+                        onChange(min(range.upperBound, newValue))
+                    } else {
+                        onChange(newValue)
+                    }
+                }) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 9, weight: .bold))
+                        .frame(width: 18, height: 18)
+                        .background(Color(nsColor: .controlBackgroundColor))
+                        .cornerRadius(3)
+                }
+                .buttonStyle(.plain)
+                .disabled(range.map { value >= $0.upperBound } ?? false)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+        .cornerRadius(4)
+        .overlay(
+            RoundedRectangle(cornerRadius: 4)
+                .strokeBorder(Color(nsColor: .separatorColor).opacity(0.5), lineWidth: 0.5)
+        )
+    }
+}
+
+// MARK: - Slider Control
+
+private struct SliderControlView: View {
+    let label: String
+    let value: Double
+    let range: ClosedRange<Double>
+    let step: Double?
+    let onChange: (Double) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(label)
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundColor(.secondary)
+
+                Spacer()
+
+                Text(String(format: "%.1f", value))
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundColor(.primary)
+            }
+
+            if let step = step {
+                Slider(
+                    value: Binding(get: { value }, set: { onChange($0) }),
+                    in: range,
+                    step: step
+                )
+                .controlSize(.mini)
+            } else {
+                Slider(
+                    value: Binding(get: { value }, set: { onChange($0) }),
+                    in: range
+                )
+                .controlSize(.mini)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+        .cornerRadius(4)
+        .overlay(
+            RoundedRectangle(cornerRadius: 4)
+                .strokeBorder(Color(nsColor: .separatorColor).opacity(0.5), lineWidth: 0.5)
+        )
+    }
+}
+
+// MARK: - Text Control
+
+private struct TextControlView: View {
+    let label: String
+    let value: String
+    let placeholder: String
+    let onChange: (String) -> Void
+
+    @State private var editingValue: String = ""
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                .foregroundColor(.secondary)
+
+            Spacer()
+
+            TextField(placeholder, text: $editingValue)
+                .font(.system(size: 10, design: .monospaced))
+                .textFieldStyle(.plain)
+                .frame(maxWidth: 120)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(Color(nsColor: .textBackgroundColor))
+                .cornerRadius(3)
+                .focused($isFocused)
+                .onAppear { editingValue = value }
+                .onChange(of: value) { newValue in
+                    if !isFocused { editingValue = newValue }
+                }
+                .onSubmit { onChange(editingValue) }
+                .onChange(of: isFocused) { focused in
+                    if !focused { onChange(editingValue) }
+                }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+        .cornerRadius(4)
+        .overlay(
+            RoundedRectangle(cornerRadius: 4)
+                .strokeBorder(Color(nsColor: .separatorColor).opacity(0.5), lineWidth: 0.5)
+        )
+    }
+}
+
+// MARK: - Picker Control
+
+private struct PickerControlView: View {
+    let label: String
+    let options: [String]
+    let selected: String
+    let onChange: (String) -> Void
+
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                .foregroundColor(.secondary)
+
+            Spacer()
+
+            Picker("", selection: Binding(
+                get: { selected },
+                set: { onChange($0) }
+            )) {
+                ForEach(options, id: \.self) { option in
+                    Text(option)
+                        .font(.system(size: 10, design: .monospaced))
+                        .tag(option)
+                }
+            }
+            .pickerStyle(.menu)
+            .frame(maxWidth: 120)
+            .controlSize(.small)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+        .cornerRadius(4)
+        .overlay(
+            RoundedRectangle(cornerRadius: 4)
+                .strokeBorder(Color(nsColor: .separatorColor).opacity(0.5), lineWidth: 0.5)
+        )
     }
 }
