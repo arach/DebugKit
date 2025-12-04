@@ -18,9 +18,7 @@ Add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(path: "../DebugKit")  // local
-    // or
-    .package(url: "https://github.com/youruser/DebugKit", from: "1.0.0")
+    .package(url: "https://github.com/arach/DebugKit", branch: "main")
 ]
 ```
 

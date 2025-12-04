@@ -93,7 +93,7 @@ onCopy: {
 ```swift
 // Package.swift
 dependencies: [
-    .package(path: "../DebugKit")
+    .package(url: "https://github.com/arach/DebugKit", branch: "main")
 ]
 
 // Target
