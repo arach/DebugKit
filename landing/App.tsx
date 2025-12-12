@@ -122,9 +122,16 @@ export default function App() {
                    alt="DebugKit in action"
                    className="w-full h-auto"
                  />
+                 {/* Center label */}
                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/screenshot:opacity-100 transition-opacity pointer-events-none">
-                   <div className="w-12 h-12 rounded-full border-2 border-white/30 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-                     <div className="w-3 h-3 rounded-full bg-white/60"></div>
+                   <span className="px-3 py-1.5 bg-black/70 backdrop-blur-sm rounded text-[11px] text-zinc-300 font-mono">
+                     Click to {isExpanded ? 'minimize' : 'expand'}
+                   </span>
+                 </div>
+                 {/* Bottom-right circle target */}
+                 <div className="absolute bottom-4 right-4 opacity-0 group-hover/screenshot:opacity-100 transition-opacity pointer-events-none">
+                   <div className="w-8 h-8 rounded-full border-2 border-orange-500/60 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                     <div className="w-2 h-2 rounded-full bg-orange-500/80"></div>
                    </div>
                  </div>
               </div>
