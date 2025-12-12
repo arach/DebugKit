@@ -8,6 +8,61 @@
 import SwiftUI
 import AppKit
 
+// MARK: - Position
+
+/// Position options for the debug toolbar
+public enum DebugToolbarPosition: String, CaseIterable, Sendable {
+    case bottomTrailing = "bottomTrailing"
+    case bottomLeading = "bottomLeading"
+    case topTrailing = "topTrailing"
+    case topLeading = "topLeading"
+
+    public var alignment: Alignment {
+        switch self {
+        case .bottomTrailing: return .bottomTrailing
+        case .bottomLeading: return .bottomLeading
+        case .topTrailing: return .topTrailing
+        case .topLeading: return .topLeading
+        }
+    }
+
+    public var icon: String {
+        switch self {
+        case .bottomTrailing: return "arrow.down.right"
+        case .bottomLeading: return "arrow.down.left"
+        case .topTrailing: return "arrow.up.right"
+        case .topLeading: return "arrow.up.left"
+        }
+    }
+
+    public var next: DebugToolbarPosition {
+        let all = Self.allCases
+        let idx = all.firstIndex(of: self) ?? 0
+        return all[(idx + 1) % all.count]
+    }
+
+    var isTop: Bool {
+        self == .topTrailing || self == .topLeading
+    }
+
+    var isLeading: Bool {
+        self == .bottomLeading || self == .topLeading
+    }
+
+    var horizontalAlignment: HorizontalAlignment {
+        isLeading ? .leading : .trailing
+    }
+
+    var scaleAnchor: UnitPoint {
+        switch self {
+        case .bottomTrailing: return .bottomTrailing
+        case .bottomLeading: return .bottomLeading
+        case .topTrailing: return .topTrailing
+        case .topLeading: return .topLeading
+        }
+    }
+}
+
 // MARK: - Data Types
 
 public struct DebugSection: Identifiable {
@@ -115,19 +170,39 @@ public struct DebugToolbar: View {
     @State private var isExpanded = false
     @State private var showCopiedFeedback = false
 
+    // Persisted settings - uses app's UserDefaults
+    @AppStorage("debugToolbar.isHidden") private var isHidden = false
+    @AppStorage("debugToolbar.position") private var positionRaw = DebugToolbarPosition.bottomTrailing.rawValue
+
+    private var position: DebugToolbarPosition {
+        get { DebugToolbarPosition(rawValue: positionRaw) ?? .bottomTrailing }
+        nonmutating set { positionRaw = newValue.rawValue }
+    }
+
     let title: String
     let icon: String
     let sections: [DebugSection]
     let controls: [DebugControl]
     let actions: [DebugAction]
     let copyHandler: (() -> String)?
+    let keyboardShortcutEnabled: Bool
 
+    /// Initialize a debug toolbar
+    /// - Parameters:
+    ///   - title: Header title (default: "DEV")
+    ///   - icon: SF Symbol name for the toggle button (default: "ant.fill")
+    ///   - sections: Data sections to display
+    ///   - controls: Interactive controls
+    ///   - actions: Action buttons
+    ///   - keyboardShortcut: Enable ⌘D to toggle visibility (default: true)
+    ///   - copyHandler: Handler for "Copy Debug Info" action
     public init(
         title: String = "DEV",
         icon: String = "ant.fill",
         sections: [DebugSection] = [],
         controls: [DebugControl] = [],
         actions: [DebugAction] = [],
+        keyboardShortcut: Bool = true,
         onCopy copyHandler: (() -> String)? = nil
     ) {
         self.title = title
@@ -135,21 +210,55 @@ public struct DebugToolbar: View {
         self.sections = sections
         self.controls = controls
         self.actions = actions
+        self.keyboardShortcutEnabled = keyboardShortcut
         self.copyHandler = copyHandler
     }
 
     public var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            if isExpanded {
-                expandedPanel
-                    .transition(.scale(scale: 0.9, anchor: .bottomTrailing).combined(with: .opacity))
+        ZStack(alignment: position.alignment) {
+            if !isHidden {
+                toolbarContent
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: position.alignment)
+        .onAppear {
+            if keyboardShortcutEnabled {
+                setupKeyboardShortcut()
+            }
+        }
+    }
+
+    private var toolbarContent: some View {
+        VStack(alignment: position.horizontalAlignment, spacing: 8) {
+            // For top positions, button comes first
+            if position.isTop {
+                toggleButton
             }
 
-            toggleButton
+            if isExpanded {
+                expandedPanel
+                    .transition(.scale(scale: 0.9, anchor: position.scaleAnchor).combined(with: .opacity))
+            }
+
+            // For bottom positions, button comes last
+            if !position.isTop {
+                toggleButton
+            }
         }
-        .padding(.trailing, 16)
-        .padding(.bottom, 16)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 16)
+    }
+
+    private func setupKeyboardShortcut() {
+        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            if event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "d" {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isHidden.toggle()
+                }
+                return nil // Consume the event
+            }
+            return event
+        }
     }
 
     // MARK: - Toggle Button
@@ -191,6 +300,19 @@ public struct DebugToolbar: View {
                     .foregroundColor(.primary)
 
                 Spacer()
+
+                // Position toggle button
+                Button(action: {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        positionRaw = position.next.rawValue
+                    }
+                }) {
+                    Image(systemName: position.icon)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Move toolbar (⌘D to hide)")
 
                 Button(action: {
                     withAnimation(.easeInOut(duration: 0.2)) {
