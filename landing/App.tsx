@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CodeArchitecture } from './components/AICodeGenerator';
 import { Button } from './components/Button';
 import { Github, Box, Layers, Zap, MousePointer2, ArrowDown, Package, Copy, CheckCircle2, XCircle, Puzzle, Gamepad2, Workflow, Terminal, Play, Eye, Clipboard, Server, Wifi } from 'lucide-react';
@@ -115,6 +115,8 @@ const Footer = () => (
 );
 
 export default function App() {
+  const [isExpanded, setIsExpanded] = useState(true);
+
   return (
     <div className="min-h-screen bg-[#09090b] selection:bg-orange-500/30 selection:text-orange-200 font-mono flex flex-col">
       <Navbar />
@@ -166,8 +168,18 @@ export default function App() {
               <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-white z-20"></div>
               <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-white z-20"></div>
               
-              <div className="relative overflow-hidden bg-[#0c0c0e] border border-zinc-800/50">
-                 <img src="/screenshot.png" alt="DebugKit in action" className="w-full h-auto" />
+              <div
+                className="relative overflow-hidden bg-[#0c0c0e] border border-zinc-800/50 cursor-pointer"
+                onClick={() => setIsExpanded(!isExpanded)}
+              >
+                 <img
+                   src={isExpanded ? `${import.meta.env.BASE_URL}screenshot.png` : `${import.meta.env.BASE_URL}screenshot-minimized.png`}
+                   alt="DebugKit in action"
+                   className="w-full h-auto transition-opacity duration-200"
+                 />
+                 <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-black/80 border border-zinc-700 rounded text-[10px] text-zinc-400 font-mono">
+                   Click to {isExpanded ? 'minimize' : 'expand'}
+                 </div>
               </div>
             </div>
             
