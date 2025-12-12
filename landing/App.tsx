@@ -132,10 +132,9 @@ export default function App() {
                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Public Beta</span>
              </div>
              
-             <h1 className="text-6xl md:text-8xl font-bold text-white mb-8 tracking-tighter leading-[0.85] font-sans">
+             <h1 className="text-5xl md:text-7xl font-bold text-white mb-8 tracking-tighter leading-[0.9] font-sans">
                DEBUG<br/>
-               TOOL<br/>
-               BAR<span className="text-orange-500">.</span>
+               TOOLBAR<span className="text-orange-500">.</span>
              </h1>
 
              <p className="text-lg text-zinc-400 mb-10 max-w-md leading-relaxed font-light font-sans">
@@ -146,16 +145,6 @@ export default function App() {
              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                <Button size="lg" icon={<Package size={16}/>}>Get Started</Button>
                <Button size="lg" variant="outline" icon={<ArrowDown size={16}/>}>View Source</Button>
-             </div>
-             
-             <div className="mt-16 border-t border-zinc-800 pt-6 flex flex-wrap items-center gap-4 text-[10px] text-zinc-600 uppercase tracking-widest font-bold">
-                <span className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-zinc-500"></div> SwiftUI Native
-                </span>
-                <span className="text-zinc-800">/</span>
-                <span className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-zinc-500"></div> Zero Config
-                </span>
              </div>
           </div>
 
@@ -169,16 +158,18 @@ export default function App() {
               <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-white z-20"></div>
               
               <div
-                className="relative overflow-hidden bg-[#0c0c0e] border border-zinc-800/50 cursor-pointer"
+                className="relative overflow-hidden bg-[#0c0c0e] border border-zinc-800/50 cursor-pointer group/screenshot"
                 onClick={() => setIsExpanded(!isExpanded)}
               >
                  <img
                    src={isExpanded ? `${import.meta.env.BASE_URL}screenshot.png` : `${import.meta.env.BASE_URL}screenshot-minimized.png`}
                    alt="DebugKit in action"
-                   className="w-full h-auto transition-opacity duration-200"
+                   className="w-full h-auto"
                  />
-                 <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-black/80 border border-zinc-700 rounded text-[10px] text-zinc-400 font-mono">
-                   Click to {isExpanded ? 'minimize' : 'expand'}
+                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/screenshot:opacity-100 transition-opacity pointer-events-none">
+                   <div className="w-12 h-12 rounded-full border-2 border-white/30 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+                     <div className="w-3 h-3 rounded-full bg-white/60"></div>
+                   </div>
                  </div>
               </div>
             </div>

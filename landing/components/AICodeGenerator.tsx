@@ -5,65 +5,98 @@ const SNIPPETS = {
   'App.swift': `import SwiftUI
 import DebugKit
 
-struct ContentView: View {
+@main
+struct TalkieApp: App {
+    var body: some Scene {
+        Window("Talkie", id: "main") {
+            #if DEBUG
+            DebugToolbarOverlay {
+                ContentView()
+            }
+            #else
+            ContentView()
+            #endif
+        }
+        .windowStyle(.hiddenTitleBar)
+    }
+}`,
+  'Overlay.swift': `import SwiftUI
+import DebugKit
+
+struct DebugToolbarOverlay<Content: View>: View {
+    @State private var showingConsole = false
+    let content: () -> Content
+
     var body: some View {
         ZStack {
-            MainContent()
+            content()
 
-            #if DEBUG
             DebugToolbar(
                 sections: buildSections(),
-                actions: buildActions()
+                actions: [
+                    DebugAction("View Console", icon: "doc.text.magnifyingglass") {
+                        showingConsole = true
+                    }
+                ],
+                onCopy: { buildCopyText() }
             )
-            #endif
+        }
+        .sheet(isPresented: $showingConsole) {
+            ConsoleView()
         }
     }
 }`,
-  'Sections.swift': `import DebugKit
-
-func buildSections() -> [DebugSection] {
+  'Sections.swift': `private func buildSections() -> [DebugSection] {
     [
         DebugSection("BUILD", [
-            ("Version", Bundle.main.version),
-            ("Commit", Bundle.main.commitHash),
-            ("Env", AppConfig.environment)
+            ("Version", Bundle.main.appVersion),
+            ("Build", Bundle.main.buildNumber),
+            ("macOS", ProcessInfo.processInfo.osVersion)
         ]),
-        DebugSection("USER", [
-            ("ID", session.userId ?? "—"),
-            ("Role", session.role.rawValue)
+        DebugSection("SYNC", [
+            ("Status", syncManager.status.rawValue),
+            ("Last", syncManager.lastSync?.relative ?? "Never"),
+            ("Pending", "\\(syncManager.pendingCount)")
         ])
     ]
-}`,
-  'Actions.swift': `import DebugKit
+}
 
-func buildActions() -> [DebugAction] {
-    [
-        DebugAction("Clear Cache", icon: "trash") {
-            CacheManager.shared.clear()
-        },
-        DebugAction("Reset Defaults", icon: "arrow.counterclockwise", destructive: true) {
-            UserDefaults.standard.removePersistentDomain(
-                forName: Bundle.main.bundleIdentifier!
-            )
+private func buildCopyText() -> String {
+    """
+    Talkie \\(Bundle.main.appVersion) (\\(Bundle.main.buildNumber))
+    macOS \\(ProcessInfo.processInfo.osVersion)
+
+    Sync: \\(syncManager.status.rawValue)
+    Last: \\(syncManager.lastSync?.relative ?? "Never")
+    """
+}`,
+  'Actions.swift': `// View-specific debug content
+struct ListViewDebugContent: View {
+    @ObservedObject var syncManager = SyncManager.shared
+
+    var body: some View {
+        VStack(spacing: 10) {
+            DebugSection(title: "SYNC") {
+                DebugActionButton(icon: "arrow.triangle.2.circlepath", label: "Force Sync") {
+                    syncManager.syncNow()
+                }
+                DebugActionButton(icon: "arrow.clockwise", label: "Full Sync") {
+                    syncManager.forceFullSync()
+                }
+            }
+
+            DebugSection(title: "RESET") {
+                DebugActionButton(icon: "trash", label: "Clear Cache", destructive: true) {
+                    CacheManager.shared.clear()
+                }
+                DebugActionButton(icon: "arrow.counterclockwise", label: "UserDefaults", destructive: true) {
+                    UserDefaults.standard.removePersistentDomain(
+                        forName: Bundle.main.bundleIdentifier!
+                    )
+                }
+            }
         }
-    ]
-}`,
-  'Controls.swift': `import DebugKit
-
-// Interactive controls for tweaking state
-controls: [
-    .toggle("Dark Mode", binding: $isDark),
-    .stepper("Font Size", binding: $fontSize, range: 12...24),
-    .picker("Env", options: ["Dev", "Staging", "Prod"], binding: $env)
-]
-
-// Copy handler for bug reports
-onCopy: {
-    """
-    Version: \\(version)
-    User: \\(userId)
-    Environment: \\(env)
-    """
+    }
 }`
 };
 
@@ -162,9 +195,9 @@ export const CodeArchitecture: React.FC<CodeArchitectureProps> = ({ frameless = 
         
         <div className="flex flex-col gap-1">
           <FileItem name="App.swift" icon={Box} color="text-orange-400" />
+          <FileItem name="Overlay.swift" icon={Sliders} color="text-green-400" />
           <FileItem name="Sections.swift" icon={Database} color="text-blue-400" />
           <FileItem name="Actions.swift" icon={FileCode} color="text-purple-400" />
-          <FileItem name="Controls.swift" icon={Sliders} color="text-green-400" />
         </div>
         
         <div className="mt-auto border-t border-zinc-800 pt-4">
