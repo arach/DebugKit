@@ -6,149 +6,151 @@ const SNIPPETS = {
 import DebugKit
 
 @main
-struct TalkieApp: App {
+struct MyApp: App {
     var body: some Scene {
-        Window("Talkie", id: "main") {
+        WindowGroup {
             #if DEBUG
-            DebugToolbarOverlay {
+            ZStack {
                 ContentView()
+                DebugToolbar(
+                    sections: debugSections,
+                    actions: debugActions,
+                    onCopy: { copyDebugInfo() }
+                )
             }
             #else
             ContentView()
             #endif
         }
-        .windowStyle(.hiddenTitleBar)
     }
 }`,
-  'Overlay.swift': `import SwiftUI
-import DebugKit
+  'Sections.swift': `import DebugKit
 
-struct DebugToolbarOverlay<Content: View>: View {
-    @State private var showingConsole = false
-    let content: () -> Content
-
-    var body: some View {
-        ZStack {
-            content()
-
-            DebugToolbar(
-                sections: buildSections(),
-                actions: [
-                    DebugAction("View Console", icon: "doc.text.magnifyingglass") {
-                        showingConsole = true
-                    }
-                ],
-                onCopy: { buildCopyText() }
-            )
-        }
-        .sheet(isPresented: $showingConsole) {
-            ConsoleView()
-        }
-    }
-}`,
-  'Sections.swift': `private func buildSections() -> [DebugSection] {
+var debugSections: [DebugSection] {
     [
         DebugSection("BUILD", [
-            ("Version", Bundle.main.appVersion),
-            ("Build", Bundle.main.buildNumber),
-            ("macOS", ProcessInfo.processInfo.osVersion)
+            ("Version", "1.2.0"),
+            ("Build", "142"),
+            ("Env", "Debug")
         ]),
-        DebugSection("SYNC", [
-            ("Status", syncManager.status.rawValue),
-            ("Last", syncManager.lastSync?.relative ?? "Never"),
-            ("Pending", "\\(syncManager.pendingCount)")
+        DebugSection("STATE", [
+            ("User", currentUser?.name ?? "Guest"),
+            ("Synced", lastSync ?? "Never")
         ])
     ]
-}
-
-private func buildCopyText() -> String {
-    """
-    Talkie \\(Bundle.main.appVersion) (\\(Bundle.main.buildNumber))
-    macOS \\(ProcessInfo.processInfo.osVersion)
-
-    Sync: \\(syncManager.status.rawValue)
-    Last: \\(syncManager.lastSync?.relative ?? "Never")
-    """
 }`,
-  'Actions.swift': `// View-specific debug content
-struct ListViewDebugContent: View {
-    @ObservedObject var syncManager = SyncManager.shared
+  'Actions.swift': `import DebugKit
 
-    var body: some View {
-        VStack(spacing: 10) {
-            DebugSection(title: "SYNC") {
-                DebugActionButton(icon: "arrow.triangle.2.circlepath", label: "Force Sync") {
-                    syncManager.syncNow()
-                }
-                DebugActionButton(icon: "arrow.clockwise", label: "Full Sync") {
-                    syncManager.forceFullSync()
-                }
-            }
-
-            DebugSection(title: "RESET") {
-                DebugActionButton(icon: "trash", label: "Clear Cache", destructive: true) {
-                    CacheManager.shared.clear()
-                }
-                DebugActionButton(icon: "arrow.counterclockwise", label: "UserDefaults", destructive: true) {
-                    UserDefaults.standard.removePersistentDomain(
-                        forName: Bundle.main.bundleIdentifier!
-                    )
-                }
-            }
+var debugActions: [DebugAction] {
+    [
+        DebugAction("Force Sync", icon: "arrow.triangle.2.circlepath") {
+            SyncManager.shared.sync()
+        },
+        DebugAction("Clear Cache", icon: "trash", destructive: true) {
+            CacheManager.shared.clear()
+        },
+        DebugAction("Reset Onboarding", icon: "arrow.counterclockwise") {
+            UserDefaults.standard.removeObject(forKey: "onboarded")
         }
-    }
+    ]
+}`,
+  'Copy.swift': `func copyDebugInfo() -> String {
+    let version = Bundle.main.appVersion
+    let build = Bundle.main.buildNumber
+    let user = currentUser?.name ?? "Guest"
+
+    return """
+    App: MyApp v\\(version) (\\(build))
+    User: \\(user)
+    Last Sync: \\(lastSync ?? "Never")
+    """
 }`
 };
 
 type FileName = keyof typeof SNIPPETS;
 
-// Robust Tokenizer Regex for Swift
-const TOKENIZER_REGEX = /(\/\/.*)|("""[\s\S]*?"""|"(?:[^"\\]|\\.)*")|(#\w+)|(@\w+)|(\b(?:import|struct|var|let|class|func|return|some|extension|if|else|switch|case|default|public|private|init|static|true|false|nil|self|await|async|try|throw|throws)\b)|(\b[A-Z]\w+\b)|(\b\w+:)/g;
+// Simple Swift syntax highlighter
+const highlightSwift = (code: string): React.ReactNode[] => {
+  const tokens: React.ReactNode[] = [];
+  let i = 0;
+
+  const keywords = new Set([
+    'import', 'struct', 'class', 'func', 'var', 'let', 'return', 'if', 'else',
+    'some', 'private', 'public', 'static', 'true', 'false', 'nil', 'self'
+  ]);
+
+  while (i < code.length) {
+    // Comments
+    if (code.slice(i, i + 2) === '//') {
+      const end = code.indexOf('\n', i);
+      const comment = end === -1 ? code.slice(i) : code.slice(i, end);
+      tokens.push(<span key={i} className="text-zinc-500 italic">{comment}</span>);
+      i += comment.length;
+      continue;
+    }
+
+    // Strings
+    if (code[i] === '"') {
+      let j = i + 1;
+      while (j < code.length && code[j] !== '"') {
+        if (code[j] === '\\') j++;
+        j++;
+      }
+      const str = code.slice(i, j + 1);
+      tokens.push(<span key={i} className="text-green-400">{str}</span>);
+      i = j + 1;
+      continue;
+    }
+
+    // Preprocessor (#if, #else, #endif)
+    if (code[i] === '#' && /[a-zA-Z]/.test(code[i + 1] || '')) {
+      let j = i + 1;
+      while (j < code.length && /\w/.test(code[j])) j++;
+      const directive = code.slice(i, j);
+      tokens.push(<span key={i} className="text-pink-400">{directive}</span>);
+      i = j;
+      continue;
+    }
+
+    // Property wrappers (@State, @main, etc.)
+    if (code[i] === '@') {
+      let j = i + 1;
+      while (j < code.length && /\w/.test(code[j])) j++;
+      const attr = code.slice(i, j);
+      tokens.push(<span key={i} className="text-orange-400">{attr}</span>);
+      i = j;
+      continue;
+    }
+
+    // Words (keywords, types, identifiers)
+    if (/[a-zA-Z_]/.test(code[i])) {
+      let j = i;
+      while (j < code.length && /[\w]/.test(code[j])) j++;
+      const word = code.slice(i, j);
+
+      if (keywords.has(word)) {
+        tokens.push(<span key={i} className="text-purple-400">{word}</span>);
+      } else if (/^[A-Z]/.test(word)) {
+        tokens.push(<span key={i} className="text-yellow-200">{word}</span>);
+      } else if (code[j] === ':') {
+        tokens.push(<span key={i} className="text-blue-300">{word}</span>);
+      } else {
+        tokens.push(<span key={i} className="text-zinc-300">{word}</span>);
+      }
+      i = j;
+      continue;
+    }
+
+    // Everything else
+    tokens.push(<span key={i} className="text-zinc-400">{code[i]}</span>);
+    i++;
+  }
+
+  return tokens;
+};
 
 const HighlightedCode = ({ code }: { code: string }) => {
-  const elements: React.ReactNode[] = [];
-  let lastIndex = 0;
-  let match;
-
-  // Reset regex state
-  TOKENIZER_REGEX.lastIndex = 0;
-
-  while ((match = TOKENIZER_REGEX.exec(code)) !== null) {
-    const [fullMatch, comment, string, preprocessor, decorator, keyword, type, arg] = match;
-    const index = match.index;
-
-    // Push preceding plain text
-    if (index > lastIndex) {
-      elements.push(code.slice(lastIndex, index));
-    }
-
-    if (comment) {
-      elements.push(<span key={index} className="text-zinc-500 italic">{comment}</span>);
-    } else if (string) {
-      elements.push(<span key={index} className="text-green-400">{string}</span>);
-    } else if (preprocessor) {
-      elements.push(<span key={index} className="text-pink-400">{preprocessor}</span>);
-    } else if (decorator) {
-      elements.push(<span key={index} className="text-orange-400">{decorator}</span>);
-    } else if (keyword) {
-      elements.push(<span key={index} className="text-purple-400">{keyword}</span>);
-    } else if (type) {
-      elements.push(<span key={index} className="text-yellow-200">{type}</span>);
-    } else if (arg) {
-      elements.push(<span key={index} className="text-blue-300">{arg}</span>);
-    } else {
-      elements.push(fullMatch);
-    }
-
-    lastIndex = TOKENIZER_REGEX.lastIndex;
-  }
-
-  // Push remaining text
-  if (lastIndex < code.length) {
-    elements.push(code.slice(lastIndex));
-  }
-
-  return <>{elements}</>;
+  return <>{highlightSwift(code)}</>;
 };
 
 interface CodeArchitectureProps {
@@ -197,9 +199,9 @@ export const CodeArchitecture: React.FC<CodeArchitectureProps> = ({ frameless = 
         
         <div className="flex flex-col gap-1">
           <FileItem name="App.swift" icon={Box} color="text-orange-400" />
-          <FileItem name="Overlay.swift" icon={Sliders} color="text-green-400" />
           <FileItem name="Sections.swift" icon={Database} color="text-blue-400" />
           <FileItem name="Actions.swift" icon={FileCode} color="text-purple-400" />
+          <FileItem name="Copy.swift" icon={Sliders} color="text-green-400" />
         </div>
         
         <div className="mt-auto border-t border-zinc-800 pt-4">
@@ -224,28 +226,16 @@ export const CodeArchitecture: React.FC<CodeArchitectureProps> = ({ frameless = 
         </div>
         
         <div className="flex-1 overflow-auto p-6 custom-scrollbar">
-          <pre className="font-mono text-xs md:text-sm leading-6 text-zinc-400">
+          <pre className="font-mono text-xs md:text-sm leading-6">
             <code>
-              {codeSnippet.split('\n').map((line, i) => {
-                // Check if we're inside a multiline string
-                const isMultilineStringMarker = line.trim() === '"""';
-                const hasStringInterpolation = line.includes('\\(');
-
-                return (
-                  <div key={i} className="table-row">
-                    <span className="table-cell text-zinc-800 select-none text-right pr-4 w-8">{i + 1}</span>
-                    <span className="table-cell whitespace-pre-wrap break-all">
-                      {isMultilineStringMarker ? (
-                        <span className="text-green-400">{line}</span>
-                      ) : hasStringInterpolation ? (
-                        <span className="text-green-400">{line}</span>
-                      ) : (
-                        <HighlightedCode code={line} />
-                      )}
-                    </span>
-                  </div>
-                );
-              })}
+              {codeSnippet.split('\n').map((line, i) => (
+                <div key={i} className="table-row">
+                  <span className="table-cell text-zinc-700 select-none text-right pr-4 w-8">{i + 1}</span>
+                  <span className="table-cell whitespace-pre">
+                    <HighlightedCode code={line} />
+                  </span>
+                </div>
+              ))}
             </code>
           </pre>
         </div>
