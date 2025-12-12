@@ -166,7 +166,7 @@ public enum DebugControl: Identifiable {
 
 // MARK: - Debug Toolbar
 
-public struct DebugToolbar: View {
+public struct DebugToolbar<CustomContent: View>: View {
     @State private var isExpanded = false
     @State private var showCopiedFeedback = false
 
@@ -186,8 +186,9 @@ public struct DebugToolbar: View {
     let actions: [DebugAction]
     let copyHandler: (() -> String)?
     let keyboardShortcutEnabled: Bool
+    let customContent: CustomContent
 
-    /// Initialize a debug toolbar
+    /// Initialize a debug toolbar with custom SwiftUI content
     /// - Parameters:
     ///   - title: Header title (default: "DEV")
     ///   - icon: SF Symbol name for the toggle button (default: "ant.fill")
@@ -196,6 +197,30 @@ public struct DebugToolbar: View {
     ///   - actions: Action buttons
     ///   - keyboardShortcut: Enable ⌘D to toggle visibility (default: true)
     ///   - copyHandler: Handler for "Copy Debug Info" action
+    ///   - customContent: Custom SwiftUI content to display in the panel
+    public init(
+        title: String = "DEV",
+        icon: String = "ant.fill",
+        sections: [DebugSection] = [],
+        controls: [DebugControl] = [],
+        actions: [DebugAction] = [],
+        keyboardShortcut: Bool = true,
+        onCopy copyHandler: (() -> String)? = nil,
+        @ViewBuilder customContent: () -> CustomContent
+    ) {
+        self.title = title
+        self.icon = icon
+        self.sections = sections
+        self.controls = controls
+        self.actions = actions
+        self.keyboardShortcutEnabled = keyboardShortcut
+        self.copyHandler = copyHandler
+        self.customContent = customContent()
+    }
+}
+
+extension DebugToolbar where CustomContent == EmptyView {
+    /// Initialize a debug toolbar without custom content
     public init(
         title: String = "DEV",
         icon: String = "ant.fill",
@@ -205,15 +230,19 @@ public struct DebugToolbar: View {
         keyboardShortcut: Bool = true,
         onCopy copyHandler: (() -> String)? = nil
     ) {
-        self.title = title
-        self.icon = icon
-        self.sections = sections
-        self.controls = controls
-        self.actions = actions
-        self.keyboardShortcutEnabled = keyboardShortcut
-        self.copyHandler = copyHandler
+        self.init(
+            title: title,
+            icon: icon,
+            sections: sections,
+            controls: controls,
+            actions: actions,
+            keyboardShortcut: keyboardShortcut,
+            onCopy: copyHandler
+        ) { EmptyView() }
     }
+}
 
+extension DebugToolbar {
     public var body: some View {
         ZStack(alignment: position.alignment) {
             if !isHidden {
@@ -336,6 +365,9 @@ public struct DebugToolbar: View {
                 ForEach(sections) { section in
                     SectionView(section: section)
                 }
+
+                // Custom SwiftUI content (if provided)
+                customContent
 
                 if !controls.isEmpty {
                     ControlsView(controls: controls)
