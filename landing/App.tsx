@@ -127,11 +127,6 @@ export default function App() {
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-24 items-center mb-40 border-b border-zinc-800 pb-20 relative">
 
           <div className="lg:col-span-5 relative z-10">
-             <div className="inline-flex items-center gap-2 mb-8 border border-zinc-800 px-3 py-1 rounded-full bg-zinc-900/50">
-               <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></div>
-               <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Public Beta</span>
-             </div>
-             
              <h1 className="text-5xl md:text-7xl font-bold text-white mb-8 tracking-tighter leading-[0.9] font-sans">
                DEBUG<br/>
                TOOLBAR<span className="text-orange-500">.</span>
