@@ -1,30 +1,16 @@
 # DebugKit
 
-A minimal, reusable debug toolbar for macOS SwiftUI apps.
+Debug toolbar for macOS SwiftUI apps.
 
-## Philosophy
-
-DebugKit handles the **scaffolding** - the toggle button, panel animations, copy-to-clipboard, action buttons, and editable controls - so you can focus on **what data to show**, not how to show it.
-
-The pattern is simple:
-- **You provide**: Data sections, editable controls, and actions specific to your app
-- **DebugKit provides**: The entire UI chrome, animations, and interactions
-
-This keeps debug toolbars consistent across projects while letting each app surface its own relevant state.
-
-## Setup
-
-Add to your `Package.swift`:
+## Install
 
 ```swift
+// Package.swift
 dependencies: [
     .package(url: "https://github.com/arach/DebugKit", branch: "main")
 ]
-```
 
-Then add to your target:
-
-```swift
+// Target
 .target(name: "YourApp", dependencies: ["DebugKit"])
 ```
 
@@ -37,14 +23,11 @@ struct ContentView: View {
     @State private var count = 0
     @State private var isActive = false
     @State private var scale = 1.0
-    @State private var name = "Debug"
 
     var body: some View {
         ZStack {
-            // Your main content
             MainContent()
 
-            // Debug toolbar overlays in bottom-right
             DebugToolbar(
                 sections: [
                     DebugSection("STATE", [
@@ -53,20 +36,9 @@ struct ContentView: View {
                     ])
                 ],
                 controls: [
-                    // Toggle with binding
                     .toggle("Active", binding: $isActive),
-
-                    // Stepper with range
                     .stepper("Count", binding: $count, range: 0...100),
-
-                    // Slider for continuous values
-                    .slider("Scale", binding: $scale, range: 0.5...2.0),
-
-                    // Text field
-                    .text("Name", binding: $name, placeholder: "Enter name"),
-
-                    // Picker for options
-                    .picker("Mode", options: ["Light", "Dark", "Auto"], binding: $mode)
+                    .slider("Scale", binding: $scale, range: 0.5...2.0)
                 ],
                 actions: [
                     DebugAction("Reset", icon: "arrow.counterclockwise") {
@@ -82,94 +54,59 @@ struct ContentView: View {
 }
 ```
 
-### Controls with Closures
-
-If you prefer closures over bindings:
+### Closures
 
 ```swift
-controls: [
-    .toggle("Debug Mode", value: isDebug) { newValue in
-        isDebug = newValue
-        logger.setLevel(newValue ? .debug : .info)
-    },
-    .stepper("Zoom", value: zoomLevel, range: 1...10, step: 1) { newValue in
-        zoomLevel = newValue
-    },
-    .text("API Key", value: apiKey) { newValue in
-        apiKey = newValue
-        client.updateKey(newValue)
-    }
-]
+.toggle("Debug", value: isDebug) { newValue in
+    isDebug = newValue
+    logger.setLevel(newValue ? .debug : .info)
+}
 ```
 
 ## API
 
-### DebugToolbar
-
 ```swift
 DebugToolbar(
-    title: String = "DEV",              // Header text
-    icon: String = "ant.fill",          // SF Symbol for toggle button
-    sections: [DebugSection] = [],      // Read-only data to display
-    controls: [DebugControl] = [],      // Editable controls
-    actions: [DebugAction] = [],        // Action buttons
-    onCopy: (() -> String)? = nil       // Copy-to-clipboard handler
+    title: String = "DEV",
+    icon: String = "ant.fill",
+    sections: [DebugSection] = [],
+    controls: [DebugControl] = [],
+    actions: [DebugAction] = [],
+    onCopy: (() -> String)? = nil
 )
 ```
 
 ### DebugSection
 
-Read-only key-value pairs:
-
 ```swift
-DebugSection("SECTION NAME", [
-    ("Key", "Value"),
-    ("Another Key", "Another Value")
+DebugSection("NAME", [
+    ("Key", "Value")
 ])
 ```
 
 ### DebugControl
 
-Editable controls for modifying state. Each supports both bindings and closures:
-
 ```swift
-// Boolean toggle
 .toggle("Label", binding: $bool)
-.toggle("Label", value: bool) { newValue in ... }
-
-// Integer stepper with +/- buttons
-.stepper("Label", binding: $int, range: 0...100, step: 1)
-.stepper("Label", value: int, range: 0...100, step: 1) { newValue in ... }
-
-// Double slider
-.slider("Label", binding: $double, range: 0.0...1.0, step: 0.1)
-.slider("Label", value: double, range: 0.0...1.0) { newValue in ... }
-
-// Text field (commits on Enter or focus loss)
-.text("Label", binding: $string, placeholder: "hint")
-.text("Label", value: string, placeholder: "hint") { newValue in ... }
-
-// Dropdown picker
-.picker("Label", options: ["A", "B", "C"], binding: $selection)
-.picker("Label", options: ["A", "B", "C"], selected: selection) { newValue in ... }
+.stepper("Label", binding: $int, range: 0...100)
+.slider("Label", binding: $double, range: 0.0...1.0)
+.text("Label", binding: $string)
+.picker("Label", options: ["A", "B"], binding: $selection)
 ```
 
 ### DebugAction
 
-Buttons for triggering actions:
-
 ```swift
-DebugAction("Label", icon: "sf.symbol.name", destructive: false) {
-    // action
+DebugAction("Label", icon: "sf.symbol", destructive: false) {
+    // do something
 }
 ```
 
-## Design Decisions
+## Notes
 
-- **No `#if DEBUG` wrapper** - The library itself doesn't wrap in DEBUG flags. You decide where/when to show it. Wrap your usage in `#if DEBUG` if you want debug-only behavior.
-- **Overlay pattern** - Designed to be placed in a ZStack overlay, positioned bottom-right
-- **Minimal state** - Only tracks expanded/collapsed state internally
-- **macOS only** - Uses `NSPasteboard` and `nsColor` for native look
+- Doesn't wrap in `#if DEBUG` — do that yourself
+- Positions bottom-right in a ZStack
+- macOS only
 
 ## License
 
