@@ -1,17 +1,16 @@
 import React from 'react';
 import { CodeArchitecture } from './components/AICodeGenerator';
 import { Button } from './components/Button';
-import { MockInterface } from './components/MockInterface';
 import { Github, Box, Layers, Zap, MousePointer2, ArrowDown, Package, Copy, CheckCircle2, XCircle, Puzzle, Gamepad2, Workflow, Terminal, Play, Eye, Clipboard, Server, Wifi } from 'lucide-react';
 
 const Features = () => (
   <div className="relative border-t border-zinc-800">
     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-px bg-zinc-800">
       {[
-        { icon: <Zap size={24} strokeWidth={1} />, title: "PLUG & PLAY", desc: "Drop it into your view hierarchy overlay. It handles all the UI scaffolding for you." },
-        { icon: <Play size={24} strokeWidth={1} />, title: "ACTIONABLE", desc: "Trigger convenience functions like resetting cache, seeding data, or toggling flags." },
-        { icon: <Eye size={24} strokeWidth={1} />, title: "INSPECTABLE", desc: "Visualize hidden state, environment variables, and build metadata in real-time." },
-        { icon: <Clipboard size={24} strokeWidth={1} />, title: "COPYABLE", desc: "One-click copy handler to grab all debug info for bug reports and tickets." }
+        { icon: <Zap size={24} strokeWidth={1} />, title: "Drop-in", desc: "Add to any view. Handles positioning, animations, and styling." },
+        { icon: <Play size={24} strokeWidth={1} />, title: "Actions", desc: "Wire up buttons to reset state, clear caches, or toggle settings." },
+        { icon: <Eye size={24} strokeWidth={1} />, title: "Sections", desc: "Show key-value pairs for any state you want to inspect." },
+        { icon: <Clipboard size={24} strokeWidth={1} />, title: "Copy", desc: "One-click to copy debug info for bug reports." }
       ].map((f, i) => (
         <div key={i} className="p-10 bg-[#09090b] hover:bg-[#050505] transition-colors group relative border-r border-zinc-800 last:border-r-0">
           <div className="mb-6 text-zinc-500 group-hover:text-orange-400 transition-colors">{f.icon}</div>
@@ -26,16 +25,15 @@ const Features = () => (
 const ComparisonTable = () => (
   <div className="border border-zinc-800 bg-[#0c0c0e]">
     <div className="grid grid-cols-3 border-b border-zinc-800 bg-zinc-900/20">
-      <div className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest">Effort</div>
+      <div className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest"></div>
       <div className="p-4 text-xs font-bold text-white uppercase tracking-widest border-l border-zinc-800 bg-zinc-900/40">DebugKit</div>
-      <div className="p-4 text-xs font-bold text-zinc-600 uppercase tracking-widest border-l border-zinc-800">Custom Implementation</div>
+      <div className="p-4 text-xs font-bold text-zinc-600 uppercase tracking-widest border-l border-zinc-800">DIY</div>
     </div>
     {[
-      { label: "UI Scaffolding", wf: "Automatic", web: "Manual Code" },
-      { label: "Expansion Logic", wf: "Built-in", web: "Manual State" },
-      { label: "Styling", wf: "Pre-configured", web: "Custom CSS/Modifiers" },
-      { label: "Setup Time", wf: "< 2 mins", web: "2-4 hours" },
-      { label: "Maintenance", wf: "Zero", web: "High" },
+      { label: "Panel UI", wf: "Built-in", web: "Write it" },
+      { label: "Expand/collapse", wf: "Built-in", web: "Write it" },
+      { label: "Styling", wf: "Built-in", web: "Write it" },
+      { label: "Copy to clipboard", wf: "Built-in", web: "Write it" },
     ].map((row, i) => (
       <div key={i} className="grid grid-cols-3 border-b last:border-b-0 border-zinc-800 hover:bg-white/5 transition-colors">
         <div className="p-4 text-xs font-mono text-zinc-400">{row.label}</div>
@@ -49,10 +47,10 @@ const ComparisonTable = () => (
 const UseCases = () => (
   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
     {[
-      { title: "Environment Switching", icon: <Server size={20}/>, desc: "Toggle between Staging, Dev, and Prod API endpoints instantly." },
-      { title: "User Masquerading", icon: <Puzzle size={20}/>, desc: "Inject user roles or IDs to test permission-gated features." },
-      { title: "Feature Flags", icon: <Zap size={20}/>, desc: "Enable or disable incomplete features without rebuilding." },
-      { title: "Network Sim", icon: <Wifi size={20}/>, desc: "Simulate slow connections or error states directly from the UI." },
+      { title: "Show build info", icon: <Server size={20}/>, desc: "Version, commit hash, environment—visible at a glance." },
+      { title: "Reset state", icon: <Puzzle size={20}/>, desc: "Clear caches, reset user defaults, seed test data." },
+      { title: "Toggle flags", icon: <Zap size={20}/>, desc: "Flip feature flags or debug settings without rebuilding." },
+      { title: "Copy debug info", icon: <Wifi size={20}/>, desc: "Grab everything for a bug report in one click." },
     ].map((useCase, i) => (
       <div key={i} className="border border-zinc-800 p-6 bg-[#0c0c0e] hover:border-zinc-600 transition-colors group">
         <div className="mb-4 text-zinc-400 group-hover:text-white transition-colors">{useCase.icon}</div>
@@ -94,7 +92,7 @@ const Footer = () => (
             <span className="font-sans font-bold text-xl text-white tracking-tighter">DebugKit</span>
          </div>
          <p className="text-zinc-600 text-xs font-mono max-w-xs">
-           The essential developer overlay for professional macOS & iOS workflows.
+           Debug toolbar for macOS SwiftUI apps.
          </p>
       </div>
       
@@ -133,19 +131,19 @@ export default function App() {
              </div>
              
              <h1 className="text-6xl md:text-8xl font-bold text-white mb-8 tracking-tighter leading-[0.85] font-sans">
-               INSTANT<br/>
-               DEV<br/>
-               TOOLS<span className="text-orange-500">.</span>
+               DEBUG<br/>
+               TOOL<br/>
+               BAR<span className="text-orange-500">.</span>
              </h1>
-             
+
              <p className="text-lg text-zinc-400 mb-10 max-w-md leading-relaxed font-light font-sans">
-               A reusable debug toolbar for macOS & iOS apps. 
-               Zero scaffolding. Present info and actions in seconds.
+               Drop-in debug panel for macOS SwiftUI apps.
+               You provide the data, it handles the UI.
              </p>
              
              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-               <Button size="lg" icon={<Package size={16}/>}>ADD PACKAGE</Button>
-               <Button size="lg" variant="outline" icon={<ArrowDown size={16}/>}>VIEW SOURCE</Button>
+               <Button size="lg" icon={<Package size={16}/>}>Get Started</Button>
+               <Button size="lg" variant="outline" icon={<ArrowDown size={16}/>}>View Source</Button>
              </div>
              
              <div className="mt-16 border-t border-zinc-800 pt-6 flex flex-wrap items-center gap-4 text-[10px] text-zinc-600 uppercase tracking-widest font-bold">
@@ -168,15 +166,8 @@ export default function App() {
               <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-white z-20"></div>
               <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-white z-20"></div>
               
-              <div className="relative aspect-[16/10] overflow-hidden bg-[#0c0c0e] border border-zinc-800/50">
-                 <MockInterface />
-                 
-                 <div className="absolute bottom-6 left-6 px-4 py-2 bg-black border border-zinc-800 flex items-center gap-4 z-20">
-                    <div className="flex items-center gap-2">
-                       <div className="w-1.5 h-1.5 bg-orange-500 animate-pulse"></div>
-                       <span className="text-[10px] text-zinc-300 font-bold uppercase tracking-wider">Live Preview</span>
-                    </div>
-                 </div>
+              <div className="relative overflow-hidden bg-[#0c0c0e] border border-zinc-800/50">
+                 <img src="/screenshot.png" alt="DebugKit in action" className="w-full h-auto" />
               </div>
             </div>
             
@@ -188,8 +179,8 @@ export default function App() {
         {/* Features Section */}
         <div className="mb-40">
           <div className="flex items-end justify-between mb-10">
-            <h2 className="text-3xl font-bold text-white font-sans tracking-tight">TOOLKIT_SPECS</h2>
-            <span className="text-xs font-bold text-zinc-600 uppercase tracking-widest">Components</span>
+            <h2 className="text-3xl font-bold text-white font-sans tracking-tight">What it does</h2>
+            <span className="text-xs font-bold text-zinc-600 uppercase tracking-widest">Features</span>
           </div>
           <Features />
         </div>
@@ -203,14 +194,13 @@ export default function App() {
                <div className="w-10 h-10 border border-zinc-700 flex items-center justify-center mb-6">
                   <Terminal size={20} strokeWidth={1} />
                </div>
-               <h2 className="text-3xl font-bold text-white font-sans tracking-tight mb-4">DECLARATIVE<br/>DEBUGGING</h2>
+               <h2 className="text-3xl font-bold text-white font-sans tracking-tight mb-4">How it<br/>works</h2>
                <p className="text-zinc-500 text-sm leading-relaxed mb-8">
-                 Register sections and actions with a clean, type-safe API. 
-                 The UI is handled for you, letting you focus on the actual debug logic.
+                 Pass sections and actions. The UI is handled for you.
                </p>
                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white">
                   <ArrowDown size={14} />
-                  <span>View Implementation</span>
+                  <span>See code</span>
                </div>
 
                {/* Technical Hinge / Divider */}
@@ -233,11 +223,11 @@ export default function App() {
         {/* Comparison & Use Cases Grid */}
         <div className="mb-40 grid xl:grid-cols-12 gap-12">
            <div className="xl:col-span-5">
-              <h2 className="text-2xl font-bold text-white font-sans tracking-tight mb-8">EFFORT COMPARISON</h2>
+              <h2 className="text-2xl font-bold text-white font-sans tracking-tight mb-8">What you get</h2>
               <ComparisonTable />
            </div>
            <div className="xl:col-span-7">
-              <h2 className="text-2xl font-bold text-white font-sans tracking-tight mb-8">COMMON PATTERNS</h2>
+              <h2 className="text-2xl font-bold text-white font-sans tracking-tight mb-8">Use cases</h2>
               <UseCases />
            </div>
         </div>
@@ -245,21 +235,21 @@ export default function App() {
         {/* Quick Install */}
         <div className="max-w-2xl mx-auto text-center border border-zinc-800 p-12 bg-[#0c0c0e] relative overflow-hidden">
            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"></div>
-           
-           <h2 className="text-3xl font-bold text-white font-sans tracking-tight mb-6">INSTALLATION</h2>
+
+           <h2 className="text-3xl font-bold text-white font-sans tracking-tight mb-6">Install</h2>
            <p className="text-zinc-500 mb-8 max-w-md mx-auto font-mono text-sm">
-            Add DebugKit to your project manifest.
+            Add to Package.swift
            </p>
-           
+
            <div className="flex flex-col items-center gap-4">
-              <div className="flex items-center bg-black border border-zinc-800 p-4 w-full max-w-lg group hover:border-zinc-600 transition-colors cursor-pointer" onClick={() => navigator.clipboard.writeText('.package(url: "https://github.com/debugkit/debugkit.git", from: "1.0.0")')}>
+              <div className="flex items-center bg-black border border-zinc-800 p-4 w-full max-w-lg group hover:border-zinc-600 transition-colors cursor-pointer" onClick={() => navigator.clipboard.writeText('.package(url: "https://github.com/arach/DebugKit", branch: "main")')}>
                  <span className="text-zinc-500 mr-4 select-none">$</span>
                  <code className="flex-1 text-left text-xs md:text-sm text-zinc-300 font-mono">
-                   .package(url: "https://github.com/debugkit/debugkit.git", from: "1.0.0")
+                   .package(url: "https://github.com/arach/DebugKit", branch: "main")
                  </code>
                  <Copy size={14} className="text-zinc-600 group-hover:text-white transition-colors" />
               </div>
-              <span className="text-[10px] text-zinc-600 uppercase tracking-widest">Click to copy dependency</span>
+              <span className="text-[10px] text-zinc-600 uppercase tracking-widest">Click to copy</span>
            </div>
         </div>
 

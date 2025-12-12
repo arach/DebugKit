@@ -307,7 +307,6 @@ extension DebugToolbar {
                 .background(
                     Circle()
                         .fill(Color(nsColor: .controlBackgroundColor))
-                        .shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 2)
                 )
                 .overlay(
                     Circle()
@@ -388,7 +387,6 @@ extension DebugToolbar {
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color(nsColor: .windowBackgroundColor))
-                .shadow(color: Color.black.opacity(0.3), radius: 12, x: 0, y: 4)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 10)

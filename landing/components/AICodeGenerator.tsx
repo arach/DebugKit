@@ -5,72 +5,65 @@ const SNIPPETS = {
   'App.swift': `import SwiftUI
 import DebugKit
 
-@main
-struct MyApp: App {
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-                .overlay(alignment: .bottomTrailing) {
-                    // Integrate the toolbar with one line
-                    DebugToolbar(
-                        sections: DebugData.sections,
-                        actions: DebugData.actions
-                    )
-                }
+struct ContentView: View {
+    var body: some View {
+        ZStack {
+            MainContent()
+
+            #if DEBUG
+            DebugToolbar(
+                sections: buildSections(),
+                actions: buildActions()
+            )
+            #endif
         }
     }
 }`,
-  'DebugData.swift': `import DebugKit
+  'Sections.swift': `import DebugKit
 
-struct DebugData {
-    static let sections = [
-        DebugSection("ENVIRONMENT", [
-            ("Server", Configuration.serverURL),
-            ("Build", Bundle.main.versionString),
-            ("Branch", "feature/login-v2")
+func buildSections() -> [DebugSection] {
+    [
+        DebugSection("BUILD", [
+            ("Version", Bundle.main.version),
+            ("Commit", Bundle.main.commitHash),
+            ("Env", AppConfig.environment)
         ]),
         DebugSection("USER", [
-            ("ID", UserSession.current?.id ?? "Guest"),
-            ("Role", UserSession.current?.role.rawValue ?? "-")
+            ("ID", session.userId ?? "—"),
+            ("Role", session.role.rawValue)
         ])
     ]
-    
-    static let actions = [
-        DebugAction("Reset Cache", icon: "trash", destructive: true) {
-            CacheService.shared.clear()
+}`,
+  'Actions.swift': `import DebugKit
+
+func buildActions() -> [DebugAction] {
+    [
+        DebugAction("Clear Cache", icon: "trash") {
+            CacheManager.shared.clear()
         },
-        DebugAction("Toggle Theme", icon: "sun.max") {
-            ThemeManager.shared.toggle()
+        DebugAction("Reset Defaults", icon: "arrow.counterclockwise", destructive: true) {
+            UserDefaults.standard.removePersistentDomain(
+                forName: Bundle.main.bundleIdentifier!
+            )
         }
     ]
 }`,
-  'Network.swift': `// Dynamically inject debug headers
-class NetworkService {
-    func request(_ url: URL) async throws -> Data {
-        var request = URLRequest(url: url)
-        
-        #if DEBUG
-        request.addValue("true", forHTTPHeaderField: "X-Debug-Mode")
-        if DebugSettings.simulateSlowNetwork {
-            try await Task.sleep(nanoseconds: 1_000_000_000)
-        }
-        #endif
-        
-        return try await URLSession.shared.data(for: request)
-    }
-}`,
-  'Custom.swift': `// Custom View integration
-struct UserProfileView: View {
-    var body: some View {
-        VStack {
-            UserProfileHeader()
-            // ... content
-        }
-        .debugAction("Refresh Profile", icon: "arrow.clockwise") {
-            await viewModel.reload()
-        }
-        .debugInfo("Last Sync", value: viewModel.lastSyncTime)
-    }
+  'Controls.swift': `import DebugKit
+
+// Interactive controls for tweaking state
+controls: [
+    .toggle("Dark Mode", binding: $isDark),
+    .stepper("Font Size", binding: $fontSize, range: 12...24),
+    .picker("Env", options: ["Dev", "Staging", "Prod"], binding: $env)
+]
+
+// Copy handler for bug reports
+onCopy: {
+    """
+    Version: \\(version)
+    User: \\(userId)
+    Environment: \\(env)
+    """
 }`
 };
 
@@ -169,9 +162,9 @@ export const CodeArchitecture: React.FC<CodeArchitectureProps> = ({ frameless = 
         
         <div className="flex flex-col gap-1">
           <FileItem name="App.swift" icon={Box} color="text-orange-400" />
-          <FileItem name="DebugData.swift" icon={Database} color="text-blue-400" />
-          <FileItem name="Network.swift" icon={FileCode} color="text-purple-400" />
-          <FileItem name="Custom.swift" icon={Sliders} color="text-green-400" />
+          <FileItem name="Sections.swift" icon={Database} color="text-blue-400" />
+          <FileItem name="Actions.swift" icon={FileCode} color="text-purple-400" />
+          <FileItem name="Controls.swift" icon={Sliders} color="text-green-400" />
         </div>
         
         <div className="mt-auto border-t border-zinc-800 pt-4">

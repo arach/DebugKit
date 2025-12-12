@@ -50,7 +50,7 @@ export const MockInterface = () => {
           >
             {/* Panel Header */}
             <div className="bg-zinc-900/80 px-3 py-2 flex items-center justify-between border-b border-zinc-800">
-              <span className="text-[10px] font-bold font-mono tracking-[0.2em] text-white">DEV_TOOLS</span>
+              <span className="text-[10px] font-bold font-mono tracking-[0.2em] text-white">DEV</span>
               <button onClick={() => setIsExpanded(false)} className="text-zinc-500 hover:text-white">
                 <X size={12} />
               </button>
@@ -61,29 +61,29 @@ export const MockInterface = () => {
               
               {/* Section 1 */}
               <div>
-                <div className="text-[9px] font-mono font-bold text-zinc-500 tracking-wider mb-2">ENVIRONMENT</div>
+                <div className="text-[9px] font-mono font-bold text-zinc-500 tracking-wider mb-2">BUILD</div>
                 <div className="border border-zinc-800 rounded bg-zinc-900/30 overflow-hidden">
                   <div className="flex justify-between px-2 py-1.5 border-b border-zinc-800/50">
-                    <span className="text-[10px] font-mono text-zinc-400">API Endpoint</span>
-                    <span className="text-[10px] font-mono text-white">Staging</span>
+                    <span className="text-[10px] font-mono text-zinc-400">Version</span>
+                    <span className="text-[10px] font-mono text-white">2.1.0</span>
                   </div>
                   <div className="flex justify-between px-2 py-1.5 bg-zinc-800/20">
-                    <span className="text-[10px] font-mono text-zinc-400">Feature Flags</span>
-                    <span className="text-[10px] font-mono text-orange-400">Enabled</span>
+                    <span className="text-[10px] font-mono text-zinc-400">Env</span>
+                    <span className="text-[10px] font-mono text-orange-400">Staging</span>
                   </div>
                   <div className="flex justify-between px-2 py-1.5 border-t border-zinc-800/50">
-                    <span className="text-[10px] font-mono text-zinc-400">Build</span>
-                    <span className="text-[10px] font-mono text-white">2.1.0 (455)</span>
+                    <span className="text-[10px] font-mono text-zinc-400">Commit</span>
+                    <span className="text-[10px] font-mono text-white">a3f8c21</span>
                   </div>
                 </div>
               </div>
 
               {/* Section 2 */}
               <div>
-                <div className="text-[9px] font-mono font-bold text-zinc-500 tracking-wider mb-2">USER SESSION</div>
+                <div className="text-[9px] font-mono font-bold text-zinc-500 tracking-wider mb-2">USER</div>
                 <div className="border border-zinc-800 rounded bg-zinc-900/30 overflow-hidden">
                    <div className="flex justify-between px-2 py-1.5">
-                    <span className="text-[10px] font-mono text-zinc-400">User ID</span>
+                    <span className="text-[10px] font-mono text-zinc-400">ID</span>
                     <span className="text-[10px] font-mono text-white">usr_8829a</span>
                   </div>
                 </div>
@@ -95,19 +95,19 @@ export const MockInterface = () => {
                 <div className="flex flex-col gap-1">
                   <button className="flex items-center gap-2 px-2 py-1.5 hover:bg-zinc-800 rounded text-left transition-colors group">
                     <Trash2 size={12} className="text-red-400" />
-                    <span className="text-[10px] font-mono text-red-300 group-hover:text-red-200">Reset Local Storage</span>
+                    <span className="text-[10px] font-mono text-red-300 group-hover:text-red-200">Clear Cache</span>
                   </button>
                   <button className="flex items-center gap-2 px-2 py-1.5 hover:bg-zinc-800 rounded text-left transition-colors group">
                     <Database size={12} className="text-blue-400" />
-                    <span className="text-[10px] font-mono text-zinc-300 group-hover:text-white">Seed Test Data</span>
+                    <span className="text-[10px] font-mono text-zinc-300 group-hover:text-white">Reset Defaults</span>
                   </button>
-                  <button 
+                  <button
                     onClick={handleCopy}
                     className="flex items-center gap-2 px-2 py-1.5 hover:bg-zinc-800 rounded text-left transition-colors group"
                   >
                     {copied ? <div className="w-3 h-3 text-green-500">✓</div> : <Copy size={12} className="text-zinc-500 group-hover:text-white" />}
                     <span className={`text-[10px] font-mono transition-colors ${copied ? 'text-green-500' : 'text-zinc-300 group-hover:text-white'}`}>
-                      {copied ? 'Copied to Clipboard' : 'Copy Debug Info'}
+                      {copied ? 'Copied' : 'Copy Info'}
                     </span>
                   </button>
                 </div>
