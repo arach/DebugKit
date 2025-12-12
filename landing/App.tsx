@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { CodeArchitecture } from './components/AICodeGenerator';
 import { Button } from './components/Button';
-import { Github, Box, Layers, Zap, MousePointer2, ArrowDown, Package, Copy, CheckCircle2, XCircle, Puzzle, Gamepad2, Workflow, Terminal, Play, Eye, Clipboard, Server, Wifi } from 'lucide-react';
+import { Github, ArrowDown, Package, Copy, Terminal, Play, Eye, Clipboard, Zap } from 'lucide-react';
 
 const Features = () => (
   <div className="relative border-t border-zinc-800">
@@ -19,45 +19,6 @@ const Features = () => (
         </div>
       ))}
     </div>
-  </div>
-);
-
-const ComparisonTable = () => (
-  <div className="border border-zinc-800 bg-[#0c0c0e]">
-    <div className="grid grid-cols-3 border-b border-zinc-800 bg-zinc-900/20">
-      <div className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest"></div>
-      <div className="p-4 text-xs font-bold text-white uppercase tracking-widest border-l border-zinc-800 bg-zinc-900/40">DebugKit</div>
-      <div className="p-4 text-xs font-bold text-zinc-600 uppercase tracking-widest border-l border-zinc-800">DIY</div>
-    </div>
-    {[
-      { label: "Panel UI", wf: "Built-in", web: "Write it" },
-      { label: "Expand/collapse", wf: "Built-in", web: "Write it" },
-      { label: "Styling", wf: "Built-in", web: "Write it" },
-      { label: "Copy to clipboard", wf: "Built-in", web: "Write it" },
-    ].map((row, i) => (
-      <div key={i} className="grid grid-cols-3 border-b last:border-b-0 border-zinc-800 hover:bg-white/5 transition-colors">
-        <div className="p-4 text-xs font-mono text-zinc-400">{row.label}</div>
-        <div className="p-4 text-xs font-mono text-white border-l border-zinc-800 font-bold bg-white/5">{row.wf}</div>
-        <div className="p-4 text-xs font-mono text-zinc-600 border-l border-zinc-800">{row.web}</div>
-      </div>
-    ))}
-  </div>
-);
-
-const UseCases = () => (
-  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-    {[
-      { title: "Show build info", icon: <Server size={20}/>, desc: "Version, commit hash, environment—visible at a glance." },
-      { title: "Reset state", icon: <Puzzle size={20}/>, desc: "Clear caches, reset user defaults, seed test data." },
-      { title: "Toggle flags", icon: <Zap size={20}/>, desc: "Flip feature flags or debug settings without rebuilding." },
-      { title: "Copy debug info", icon: <Wifi size={20}/>, desc: "Grab everything for a bug report in one click." },
-    ].map((useCase, i) => (
-      <div key={i} className="border border-zinc-800 p-6 bg-[#0c0c0e] hover:border-zinc-600 transition-colors group">
-        <div className="mb-4 text-zinc-400 group-hover:text-white transition-colors">{useCase.icon}</div>
-        <h4 className="text-sm font-bold text-white mb-2 uppercase tracking-wide">{useCase.title}</h4>
-        <p className="text-xs text-zinc-500 font-mono leading-relaxed">{useCase.desc}</p>
-      </div>
-    ))}
   </div>
 );
 
@@ -218,17 +179,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Comparison & Use Cases Grid */}
-        <div className="mb-40 grid xl:grid-cols-12 gap-12">
-           <div className="xl:col-span-5">
-              <h2 className="text-2xl font-bold text-white font-sans tracking-tight mb-8">What you get</h2>
-              <ComparisonTable />
-           </div>
-           <div className="xl:col-span-7">
-              <h2 className="text-2xl font-bold text-white font-sans tracking-tight mb-8">Use cases</h2>
-              <UseCases />
-           </div>
-        </div>
 
         {/* Quick Install */}
         <div className="max-w-2xl mx-auto text-center border border-zinc-800 p-12 bg-[#0c0c0e] relative overflow-hidden">
