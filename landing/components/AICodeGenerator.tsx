@@ -103,7 +103,7 @@ struct ListViewDebugContent: View {
 type FileName = keyof typeof SNIPPETS;
 
 // Robust Tokenizer Regex for Swift
-const TOKENIZER_REGEX = /(\/\/.*)|("""[\s\S]*?"""|"(?:[^"\\]|\\.)*")|(@\w+)|(\b(?:import|struct|var|let|class|func|return|some|extension|if|else|switch|case|default|public|private|init|static)\b)|(\b[A-Z]\w+\b)|(\b\w+:)/g;
+const TOKENIZER_REGEX = /(\/\/.*)|("""[\s\S]*?"""|"(?:[^"\\]|\\.)*")|(#\w+)|(@\w+)|(\b(?:import|struct|var|let|class|func|return|some|extension|if|else|switch|case|default|public|private|init|static|true|false|nil|self|await|async|try|throw|throws)\b)|(\b[A-Z]\w+\b)|(\b\w+:)/g;
 
 const HighlightedCode = ({ code }: { code: string }) => {
   const elements: React.ReactNode[] = [];
@@ -114,7 +114,7 @@ const HighlightedCode = ({ code }: { code: string }) => {
   TOKENIZER_REGEX.lastIndex = 0;
 
   while ((match = TOKENIZER_REGEX.exec(code)) !== null) {
-    const [fullMatch, comment, string, decorator, keyword, type, arg] = match;
+    const [fullMatch, comment, string, preprocessor, decorator, keyword, type, arg] = match;
     const index = match.index;
 
     // Push preceding plain text
@@ -126,6 +126,8 @@ const HighlightedCode = ({ code }: { code: string }) => {
       elements.push(<span key={index} className="text-zinc-500 italic">{comment}</span>);
     } else if (string) {
       elements.push(<span key={index} className="text-green-400">{string}</span>);
+    } else if (preprocessor) {
+      elements.push(<span key={index} className="text-pink-400">{preprocessor}</span>);
     } else if (decorator) {
       elements.push(<span key={index} className="text-orange-400">{decorator}</span>);
     } else if (keyword) {
@@ -224,14 +226,26 @@ export const CodeArchitecture: React.FC<CodeArchitectureProps> = ({ frameless = 
         <div className="flex-1 overflow-auto p-6 custom-scrollbar">
           <pre className="font-mono text-xs md:text-sm leading-6 text-zinc-400">
             <code>
-              {codeSnippet.split('\n').map((line, i) => (
-                <div key={i} className="table-row">
-                  <span className="table-cell text-zinc-800 select-none text-right pr-4 w-8">{i + 1}</span>
-                  <span className="table-cell whitespace-pre-wrap break-all">
-                    <HighlightedCode code={line} />
-                  </span>
-                </div>
-              ))}
+              {codeSnippet.split('\n').map((line, i) => {
+                // Check if we're inside a multiline string
+                const isMultilineStringMarker = line.trim() === '"""';
+                const hasStringInterpolation = line.includes('\\(');
+
+                return (
+                  <div key={i} className="table-row">
+                    <span className="table-cell text-zinc-800 select-none text-right pr-4 w-8">{i + 1}</span>
+                    <span className="table-cell whitespace-pre-wrap break-all">
+                      {isMultilineStringMarker ? (
+                        <span className="text-green-400">{line}</span>
+                      ) : hasStringInterpolation ? (
+                        <span className="text-green-400">{line}</span>
+                      ) : (
+                        <HighlightedCode code={line} />
+                      )}
+                    </span>
+                  </div>
+                );
+              })}
             </code>
           </pre>
         </div>
